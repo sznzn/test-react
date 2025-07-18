@@ -1,21 +1,35 @@
 import Note from './components/Note'
 import { useState, useEffect } from 'react'  
-import axios from 'axios'
+// import axios from 'axios'
 import noteService from './services/notes.js'
+import Notification from './components/Notification'
 
-
+const Footer = () => {
+  const footerStyle = {
+    color: 'green',
+    fontStyle: 'italic',
+    fontSize: 16
+  }
+  return (
+    <div>
+      <br />
+      <em style={footerStyle}>Note app, Department of Computer Science, University of Helsinki 2025</em>
+    </div>
+  )
+}
 
 const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('a new note ...')
   const [showAll, setShowAll] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
 
 
   useEffect(() => {
     noteService
       .getAll()
-      .then(response => {
-        setNotes(response.data)
+      .then(initialNotes => {
+        setNotes(initialNotes)
       })
   }, [])
   const toggleImportanceOf = (id) => {
@@ -24,11 +38,16 @@ const App = () => {
     const changedNote = {...note, important: !note.important}
 
     noteService.update(id, changedNote)
-    .then(response => {
-      setNotes(notes.map(note => note.id !== id ? note : response.data))
+    .then(returnedNote => {
+      setNotes(notes.map(note => note.id !== id ? note : returnedNote))
     })
     .catch(error => {
-      console.log('更新笔记出现了问题put', error)
+      console.log('error', error)
+      setErrorMessage(`Note '${note.content}' was already deleted from server`)
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+      setNotes(notes.filter(n => n.id !== id))
     })
   }
 
@@ -46,9 +65,9 @@ const App = () => {
     }
     noteService
       .create(noteObject)
-      .then(response => {
+      .then(newNote => {
         // console.log('此处整个的response', response)
-        setNotes(notes.concat(response.data))
+        setNotes(notes.concat(newNote))
         setNewNote('')
       })
       .catch(error => {
@@ -73,6 +92,7 @@ const App = () => {
   return(
     <div>
       <h1>Notes</h1>
+      <Notification message={errorMessage} />
       <ul>
         {notes.map((note) => 
           <Note key={note.id} note={note} />
@@ -92,8 +112,10 @@ const App = () => {
         <input value={newNote} onChange={handleNoteChange}/>
         <button type="submit">add</button>
       </form>
+      <Footer />
     </div>
   )
 }
+
 
 export default App
