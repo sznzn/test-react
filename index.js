@@ -5,7 +5,7 @@ import cors from 'cors'
 const app = express()
 app.use(express.json())
 app.use(cors())
-
+app.use(express.static('.'))
 let notes = [
 {
     id: 1,
@@ -27,27 +27,6 @@ let notes = [
 }
 ]
 
-
-app.get('/', (request, response) => {
-    const notesList = notes.map(note => `
-        <div style="border: 1px solid #ccc; margin: 10px; padding: 10px; border-radius: 5px;">
-            <h3>Note ${note.id}</h3>
-            <p><strong>Content:</strong> ${note.content}</p>
-            <p><strong>Date:</strong> ${note.date}</p>
-            <p><strong>Important:</strong> ${note.important ? 'Yes' : 'No'}</p>
-        </div>
-    `).join('');
-    
-    response.send(`
-        <h1>Hello World</h1> 
-        <p>This is a simple note app + nodemon</p>
-        <p><strong>Total notes: ${notes.length}</strong></p>
-        <div style="margin-top: 20px;">
-            <h2>All Notes:</h2>
-            ${notesList}
-        </div>
-    `)
-})
 
 app.get('/api/notes', (request, response) => {
     response.json(notes)
@@ -180,6 +159,11 @@ app.put('/api/notes/:id', (request, response) => {
     } else {
         response.status(404).end()
     }
+})
+
+
+app.get('*', (req, res) => {
+  res.sendFile('./index.html')
 })
 
 const PORT = process.env.PORT || 3002
