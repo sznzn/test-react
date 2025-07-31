@@ -2,6 +2,8 @@
 
 import express from 'express'
 import cors from 'cors'
+import { join } from 'path'
+
 const app = express()
 app.use(express.json())
 app.use(cors())
@@ -29,6 +31,7 @@ let notes = [
 
 
 app.get('/api/notes', (request, response) => {
+    console.log('收到 GET 请求')
     response.json(notes)
 })
 
@@ -126,8 +129,9 @@ const generateId = () => {
 }
 
 app.post('/api/notes', (request, response) => {
-    
+    console.log('收到 POST 请求')
     const body = request.body
+
     if(!body.content) { 
         return response.status(400).json({
             error: 'content missing'
@@ -144,9 +148,17 @@ app.post('/api/notes', (request, response) => {
 })
 
 app.put('/api/notes/:id', (request, response) => {
+    // 在这里设置断点 ↓
+    console.log('收到 PUT 请求')
     const id = Number(request.params.id)
+    console.log('要更新的笔记 ID:', id)
+    
     const body = request.body
+    console.log('更新数据:', body)
+    
     const note = notes.find(note => note.id === id)
+    console.log('找到的原始笔记:', note)
+    
     if(note) {
         const updatedNote = {
             ...note,
@@ -154,16 +166,19 @@ app.put('/api/notes/:id', (request, response) => {
             important : body.important !== undefined ? !note.important : note.important,
             date: body.date || note.date
         }
+        console.log('更新后的笔记:', updatedNote)
+        
         notes = notes.map(n => n.id === id ? updatedNote : n)
         response.json(updatedNote)
     } else {
+        console.log('未找到笔记 ID:', id)
         response.status(404).end()
     }
 })
 
 
 app.get('*', (req, res) => {
-  res.sendFile('./index.html')
+  res.sendFile(join(process.cwd(), 'index.html'))  // 使用当前工作目录
 })
 
 const PORT = process.env.PORT || 3002
